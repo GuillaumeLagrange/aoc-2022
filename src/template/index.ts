@@ -1,15 +1,15 @@
-import { test, readInput, readExample } from '../utils/index';
+import { readExample, readInput, test } from '../utils/index';
 
 const prepareInput = (rawInput: string) => rawInput;
 
-const input = prepareInput(readInput());
+const preparedInput = prepareInput(readInput());
 const example = prepareInput(readExample());
 
-const goA = input => {
+const goA = (input) => {
   return;
 };
 
-const goB = input => {
+const goB = (input) => {
   return;
 };
 
@@ -24,8 +24,8 @@ console.log('Example part 2:', exampleB);
 /* Results */
 
 console.time('Time');
-const resultA = goA(input);
-const resultB = goB(input);
+const resultA = goA(preparedInput);
+const resultB = goB(preparedInput);
 console.timeEnd('Time');
 
 console.log('Solution to part 1:', resultA);

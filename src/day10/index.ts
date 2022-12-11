@@ -1,35 +1,33 @@
-import { test, readInput, readExample } from '../utils/index';
+import { readExample, readInput } from '../utils/index';
 
 const keyCycles = [20, 60, 100, 140, 180, 220];
 
-type Operation = "addx" | "noop";
-
 type AddX = {
-  operation: "addx";
+  operation: 'addx';
   value: number;
-}
+};
 
 type Noop = {
-  operation: "noop";
-}
+  operation: 'noop';
+};
 
 type Entry = AddX | Noop;
 
 const prepareInput = (rawInput: string): Entry[] => {
   const lines = rawInput.trim().split('\n');
 
-  return lines.map(line => {
-    if (line === "noop") {
-      return {operation: "noop"};
+  return lines.map((line) => {
+    if (line === 'noop') {
+      return { operation: 'noop' };
     }
 
     const value = Number(line.split(' ')[1]);
 
-    return {operation: 'addx', value};
-  })
+    return { operation: 'addx', value };
+  });
 };
 
-const input = prepareInput(readInput());
+const preparedInput = prepareInput(readInput());
 const example = prepareInput(readExample());
 
 const goA = (input: Entry[]) => {
@@ -54,28 +52,27 @@ const goA = (input: Entry[]) => {
     }
 
     if (keyCycles.includes(cycles)) {
-      returnValue += register * (cycles);
+      returnValue += register * cycles;
     }
-
-  })
+  });
 
   return returnValue;
 };
 
 const getPixel = (cycle: number, register: number) => {
-  const crtCol = (cycle-1) % 40;
+  const crtCol = (cycle - 1) % 40;
 
   if (Math.abs(crtCol - register) <= 1) {
-    return '#'
+    return '#';
   }
 
   return ' ';
-}
+};
 
 const goB = (input: Entry[]) => {
   let register = 1;
   let cycles = 1;
-  let crtRow:string[] = [];
+  let crtRow: string[] = [];
 
   input.forEach((entry) => {
     if (entry.operation === 'noop') {
@@ -94,7 +91,6 @@ const goB = (input: Entry[]) => {
 
       register += value;
       cycles += 2;
-
     }
 
     crtRow.push(getPixel(cycles, register));
@@ -103,7 +99,7 @@ const goB = (input: Entry[]) => {
       console.log(crtRow.join(''));
       crtRow = [];
     }
-  })
+  });
 };
 
 /* Tests */
@@ -117,8 +113,8 @@ console.log('Example part 2:', exampleB);
 /* Results */
 
 console.time('Time');
-const resultA = goA(input);
-const resultB = goB(input);
+const resultA = goA(preparedInput);
+const resultB = goB(preparedInput);
 console.timeEnd('Time');
 
 console.log('Solution to part 1:', resultA);
