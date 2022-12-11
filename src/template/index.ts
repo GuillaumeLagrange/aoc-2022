@@ -1,5 +1,7 @@
 import { readExample, readInput } from '../utils/index';
 
+const ONLY_EXAMPLES = false;
+
 const prepareInput = (rawInput: string) => rawInput;
 
 const preparedExampleA = prepareInput(readExample());
@@ -25,10 +27,13 @@ console.log('Example part 2:', exampleB);
 
 /* Results */
 
-console.time('Time');
-const resultA = goA(preparedInputA);
-const resultB = goB(preparedInputB);
-console.timeEnd('Time');
+// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+if (!ONLY_EXAMPLES) {
+  console.time('Time');
+  const resultA = goA(preparedInputA);
+  const resultB = goB(preparedInputB);
+  console.timeEnd('Time');
 
-console.log('Solution to part 1:', resultA);
-console.log('Solution to part 2:', resultB);
+  console.log('Solution to part 1:', resultA);
+  console.log('Solution to part 2:', resultB);
+}
