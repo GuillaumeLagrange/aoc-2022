@@ -1,4 +1,4 @@
-# Advent of Code for JS/TS
+# Advent of Code 2022
 
 ## Intro
 
@@ -10,24 +10,26 @@ This repo contains zero-setup environment for [Advent of Code](https://adventofc
 
 ## Installation
 
-Clone the repo and go to the created folder:
-
-Using Yarn:
+Clone the repo and go to the created folder, and run
 
 ```
-yarn
+pnpm install
 ```
 
 ## Running dev mode
 
 ```
-yarn start <N>
+pnpm start <N>
 ```
 
 Example:
 
 ```
-yarn start 1
+pnpm start 1
 ```
 
-If the day<N> folder does not exist, it will be created from template.
+If the day<N> folder does not exist, it will be created from template, and content of the input and puzzle will be put in their respective files
+
+## Automatic retrieval of input
+
+You need [aoc-cli](https://github.com/scarvalhojr/aoc-cli) installed, available in your path, and your session cookie setup to be able to retrieve your input
