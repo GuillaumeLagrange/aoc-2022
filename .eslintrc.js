@@ -7,12 +7,13 @@ module.exports = {
   ],
   rules: {
     'prettier/prettier': 'error',
+    'no-constant-condition': 'off',
     'import/extensions': 0,
     'import/no-unresolved': 0,
     'import/prefer-default-export': 0,
     'import/no-duplicates': 'error',
-    complexity: ['error', 8],
-    'max-lines': ['error', 200],
+    complexity: 'off',
+    'max-lines': 'off',
     'max-depth': ['error', 3],
     'max-params': ['error', 4],
     eqeqeq: ['error', 'smart'],
@@ -153,7 +154,7 @@ module.exports = {
         '@typescript-eslint/interface-name-prefix': 0,
         '@typescript-eslint/explicit-module-boundary-types': 'error',
         '@typescript-eslint/no-explicit-any': 'error',
-        '@typescript-eslint/no-unused-vars': 'error',
+        '@typescript-eslint/no-unused-vars': 'warn',
         '@typescript-eslint/ban-types': [
           'error',
           {
@@ -173,7 +174,6 @@ module.exports = {
           },
         ],
         '@typescript-eslint/no-unnecessary-boolean-literal-compare': 'error',
-        '@typescript-eslint/no-unnecessary-condition': 'error',
         '@typescript-eslint/no-unnecessary-type-arguments': 'error',
         '@typescript-eslint/prefer-string-starts-ends-with': 'error',
         '@typescript-eslint/switch-exhaustiveness-check': 'error',

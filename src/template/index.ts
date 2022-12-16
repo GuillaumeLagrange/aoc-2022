@@ -24,7 +24,6 @@ console.log('Example part 2:', exampleB);
 
 /* Results */
 
-// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
 if (!ONLY_EXAMPLES) {
   const preparedInputA = prepareInput(readInput());
   const preparedInputB = prepareInput(readInput());
