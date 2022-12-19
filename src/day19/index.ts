@@ -2,7 +2,7 @@ import { readExample, readInput } from '../utils/index';
 
 const ONLY_EXAMPLES = true;
 
-const RESOURCES = ['ore', 'clay', 'obsidian'] as const;
+const RESOURCES = ['ore', 'clay', 'obsidian', 'geode'] as const;
 
 type Resource = typeof RESOURCES[number];
 
@@ -10,9 +10,12 @@ type Resources = {
   ore: number;
   clay: number;
   obsidian: number;
+  geode: number;
 };
 
-type Blueprint = Record<Resource, Resources>;
+type Blueprint = Record<Resource, Resources> & { maxGeodes: number } & {
+  max: Resources;
+};
 
 const prepareInput = (rawInput: string): Blueprint[] =>
   rawInput
@@ -24,13 +27,38 @@ const prepareInput = (rawInput: string): Blueprint[] =>
         throw new Error();
       }
 
+      const zeroCost = { ore: 0, clay: 0, obsidian: 0, geode: 0 };
+
       return {
-        ore: { ore: Number(matches[1]), clay: 0, obsidian: 0 },
-        clay: { ore: Number(matches[2]), clay: 0, obsidian: 0 },
+        maxGeodes: Number.NEGATIVE_INFINITY,
+        ore: {
+          ...zeroCost,
+          ore: Number(matches[1]),
+        },
+        clay: {
+          ...zeroCost,
+          ore: Number(matches[2]),
+        },
         obsidian: {
+          ...zeroCost,
           ore: Number(matches[3]),
           clay: Number(matches[4]),
-          obsidian: 0,
+        },
+        geode: {
+          ...zeroCost,
+          ore: Number(matches[5]),
+          obsidian: Number(matches[6]),
+        },
+
+        max: {
+          ...zeroCost,
+          ore: Math.max(
+            Number(matches[1]),
+            Number(matches[2]),
+            Number(matches[3]),
+          ),
+          clay: Number(matches[4]),
+          obsidian: Number(matches[6]),
         },
       };
     });
@@ -41,63 +69,128 @@ const preparedExampleB = prepareInput(readExample());
 type State = {
   resources: Resources;
   robots: Resources;
-  blueprint: Blueprint;
   minute: number;
 };
 
-const canAffordRobot = (robotToBuild: Resource, state: State) => {
+const canAffordRobot = (
+  robotToBuild: Resource,
+  state: State,
+  blueprint: Blueprint,
+) => {
   return RESOURCES.every(
     (resource) =>
-      state.resources[resource] >= state.blueprint[robotToBuild][resource],
+      state.resources[resource] >= blueprint[robotToBuild][resource],
   );
 };
 
-const nextMinute = (state: State): number | number[] => {
-  const newState = { ...state };
-
+const buildRobot = (
+  robotToBuild: Resource,
+  state: State,
+  blueprint: Blueprint,
+) => {
+  state.robots[robotToBuild] += 1;
   RESOURCES.forEach((resource) => {
-    newState.resources[resource] += newState.robots[resource];
+    state.resources[resource] -= blueprint[robotToBuild][resource];
   });
+};
 
-  newState.minute += 1;
+const getNewState = ({
+  robots,
+  resources: { obsidian, geode, ore, clay },
+  minute,
+}: State): State => ({
+  robots: { ...robots },
+  minute: minute + 1,
+  resources: {
+    obsidian: obsidian + robots.obsidian,
+    clay: clay + robots.clay,
+    geode: geode + robots.geode,
+    ore: ore + robots.ore,
+  },
+});
 
-  if (newState.minute === 24) {
-    return newState.resources.obsidian;
+const killPath = (
+  { resources: { geode }, robots: { geode: geodeRobots }, minute }: State,
+  { maxGeodes }: Blueprint,
+) => {
+  const remaining = 32 - minute;
+  let maxTheoreticalGeode = geode;
+  let theoreticalGeodeRobots = geodeRobots;
+  for (let i = 0; i < remaining; i++) {
+    maxTheoreticalGeode += theoreticalGeodeRobots;
+    theoreticalGeodeRobots += 1;
   }
 
-  const newStates: State[] = [{ ...newState }];
+  return maxGeodes >= maxTheoreticalGeode;
+};
 
-  RESOURCES.forEach((resourceToBuild) => {
-    if (canAffordRobot(resourceToBuild, newState)) {
-      const robotBuildState = { ...newState };
-      RESOURCES.forEach(
-        (resource) =>
-          (robotBuildState.resources[resource] -=
-            robotBuildState.blueprint[resourceToBuild][resource]),
-      );
-      robotBuildState.robots[resourceToBuild] += 1;
-      newStates.push(robotBuildState);
+const dfs = (state: State, blueprint: Blueprint): number => {
+  if (state.minute === 32) {
+    if (state.resources.geode > blueprint.maxGeodes) {
+      blueprint.maxGeodes = state.resources.geode;
     }
-  });
 
-  return newStates.flatMap(nextMinute);
+    return state.resources.geode;
+  }
+
+  if (killPath(state, blueprint)) {
+    return state.resources.geode;
+  }
+
+  if (canAffordRobot('geode', state, blueprint)) {
+    const newState = getNewState(state);
+    buildRobot('geode', newState, blueprint);
+
+    const pathValue = dfs(newState, blueprint);
+
+    if (pathValue > blueprint.maxGeodes) {
+      blueprint.maxGeodes = pathValue;
+    }
+
+    return pathValue;
+  }
+
+  for (let i = 0; i < 3; i++) {
+    const resource = RESOURCES[i];
+    if (state.robots[resource] > blueprint.max[resource]) {
+      continue;
+    }
+
+    if (canAffordRobot(resource, state, blueprint)) {
+      const newState = getNewState(state);
+      buildRobot(resource, newState, blueprint);
+
+      const pathValue = dfs(newState, blueprint);
+      if (pathValue > blueprint.maxGeodes) {
+        blueprint.maxGeodes = pathValue;
+      }
+    }
+  }
+
+  const pathValue = dfs(getNewState(state), blueprint);
+
+  return pathValue;
 };
 
 const goA = (input: Blueprint[]) => {
   console.log(input);
+  let answer = 0;
 
-  input.forEach((blueprint) => {
-    const result = nextMinute({
-      robots: { ore: 1, obsidian: 0, clay: 0 },
-      minute: 0,
-      resources: { ore: 0, obsidian: 0, clay: 0 },
+  input.forEach((blueprint, index) => {
+    dfs(
+      {
+        robots: { ore: 1, obsidian: 0, clay: 0, geode: 0 },
+        minute: 0,
+        resources: { ore: 0, obsidian: 0, clay: 0, geode: 0 },
+      },
       blueprint,
-    });
+    );
 
-    console.log(result);
+    console.log(blueprint.maxGeodes);
+    answer += (index + 1) * blueprint.maxGeodes;
   });
 
-  return;
+  return answer;
 };
 
 const goB = (input) => {
