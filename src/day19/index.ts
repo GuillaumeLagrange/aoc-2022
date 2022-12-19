@@ -1,6 +1,7 @@
+/* eslint-disable max-depth */
 import { readExample, readInput } from '../utils/index';
 
-const ONLY_EXAMPLES = true;
+const ONLY_EXAMPLES = false;
 
 const RESOURCES = ['ore', 'clay', 'obsidian', 'geode'] as const;
 
@@ -13,8 +14,10 @@ type Resources = {
   geode: number;
 };
 
-type Blueprint = Record<Resource, Resources> & { maxGeodes: number } & {
+type Blueprint = Record<Resource, Resources> & {
+  maxGeodes: number;
   max: Resources;
+  visited: Set<string>;
 };
 
 const prepareInput = (rawInput: string): Blueprint[] =>
@@ -60,6 +63,8 @@ const prepareInput = (rawInput: string): Blueprint[] =>
           clay: Number(matches[4]),
           obsidian: Number(matches[6]),
         },
+
+        visited: new Set<string>(),
       };
     });
 
@@ -112,8 +117,9 @@ const getNewState = ({
 const killPath = (
   { resources: { geode }, robots: { geode: geodeRobots }, minute }: State,
   { maxGeodes }: Blueprint,
+  max: number,
 ) => {
-  const remaining = 32 - minute;
+  const remaining = max - minute;
   let maxTheoreticalGeode = geode;
   let theoreticalGeodeRobots = geodeRobots;
   for (let i = 0; i < remaining; i++) {
@@ -124,8 +130,13 @@ const killPath = (
   return maxGeodes >= maxTheoreticalGeode;
 };
 
-const dfs = (state: State, blueprint: Blueprint): number => {
-  if (state.minute === 32) {
+const dfs = (state: State, blueprint: Blueprint, max: number): number => {
+  if (blueprint.visited.has(JSON.stringify(state))) {
+    return state.resources.geode;
+  }
+  blueprint.visited.add(JSON.stringify(state));
+
+  if (state.minute === max) {
     if (state.resources.geode > blueprint.maxGeodes) {
       blueprint.maxGeodes = state.resources.geode;
     }
@@ -133,7 +144,7 @@ const dfs = (state: State, blueprint: Blueprint): number => {
     return state.resources.geode;
   }
 
-  if (killPath(state, blueprint)) {
+  if (killPath(state, blueprint, max)) {
     return state.resources.geode;
   }
 
@@ -141,7 +152,7 @@ const dfs = (state: State, blueprint: Blueprint): number => {
     const newState = getNewState(state);
     buildRobot('geode', newState, blueprint);
 
-    const pathValue = dfs(newState, blueprint);
+    const pathValue = dfs(newState, blueprint, max);
 
     if (pathValue > blueprint.maxGeodes) {
       blueprint.maxGeodes = pathValue;
@@ -151,30 +162,37 @@ const dfs = (state: State, blueprint: Blueprint): number => {
   }
 
   for (let i = 0; i < 3; i++) {
-    const resource = RESOURCES[i];
+    const resource = RESOURCES[2 - i];
     if (state.robots[resource] > blueprint.max[resource]) {
       continue;
     }
 
-    if (canAffordRobot(resource, state, blueprint)) {
-      const newState = getNewState(state);
-      buildRobot(resource, newState, blueprint);
+    let newState = getNewState(state);
 
-      const pathValue = dfs(newState, blueprint);
-      if (pathValue > blueprint.maxGeodes) {
-        blueprint.maxGeodes = pathValue;
+    while (newState.minute < max) {
+      if (canAffordRobot(resource, state, blueprint)) {
+        buildRobot(resource, newState, blueprint);
+
+        const pathValue = dfs(newState, blueprint, max);
+        if (pathValue > blueprint.maxGeodes) {
+          blueprint.maxGeodes = pathValue;
+        }
+
+        break;
       }
+
+      newState = getNewState(newState);
     }
   }
 
-  const pathValue = dfs(getNewState(state), blueprint);
+  const pathValue = dfs(getNewState(state), blueprint, max);
 
   return pathValue;
 };
 
 const goA = (input: Blueprint[]) => {
-  console.log(input);
   let answer = 0;
+  const MAX = 24;
 
   input.forEach((blueprint, index) => {
     dfs(
@@ -184,17 +202,38 @@ const goA = (input: Blueprint[]) => {
         resources: { ore: 0, obsidian: 0, clay: 0, geode: 0 },
       },
       blueprint,
+      MAX,
     );
+    blueprint.visited.clear();
 
-    console.log(blueprint.maxGeodes);
+    console.log('Blueprint', index + 1, blueprint.maxGeodes);
     answer += (index + 1) * blueprint.maxGeodes;
   });
 
   return answer;
 };
 
-const goB = (input) => {
-  return;
+const goB = (input: Blueprint[]) => {
+  let answer = 1;
+  const MAX = 32;
+
+  input.slice(0, 3).forEach((blueprint, index) => {
+    dfs(
+      {
+        robots: { ore: 1, obsidian: 0, clay: 0, geode: 0 },
+        minute: 0,
+        resources: { ore: 0, obsidian: 0, clay: 0, geode: 0 },
+      },
+      blueprint,
+      MAX,
+    );
+    blueprint.visited.clear();
+
+    console.log('Blueprint', index + 1, blueprint.maxGeodes);
+    answer *= blueprint.maxGeodes;
+  });
+
+  return answer;
 };
 
 /* Tests */
