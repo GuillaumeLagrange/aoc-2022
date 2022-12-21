@@ -141,13 +141,7 @@ module.exports = {
             allowNullableObject: true,
           },
         ],
-        '@typescript-eslint/ban-ts-comment': [
-          'error',
-          {
-            'ts-ignore': 'allow-with-description',
-            minimumDescriptionLength: 10,
-          },
-        ],
+        '@typescript-eslint/ban-ts-comment': 'off',
         '@typescript-eslint/explicit-function-return-type': 0,
         '@typescript-eslint/explicit-member-accessibility': 0,
         '@typescript-eslint/camelcase': 0,
